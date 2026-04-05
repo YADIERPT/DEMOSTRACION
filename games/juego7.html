@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego 7 - Análisis de Patrones</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estilos específicos para la mecánica de Patrones */
+        .wheel-box {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 2rem auto;
+            background: rgba(0,0,0,0.4);
+            border-radius: 50%;
+            padding: 15px;
+            border: 2px solid var(--nikke-purple);
+        }
+
+        .wheel-outer {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 6px solid var(--gold-3d-main);
+            position: relative;
+            transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            box-shadow: var(--neon-shadow-gold);
+            background: #111;
+        }
+
+        .wheel-number {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transform-origin: 50% 50%;
+            padding-top: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.2rem;
+            color: white;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+
+        .wheel-section {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 50%, 34% 0%, 66% 0%);
+            background: #d40000;
+            transform-origin: 50% 50%;
+        }
+
+        .wheel-section.even { background: #111; }
+        .wheel-section.gold { background: #ff4500; }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #ff4500;
+            z-index: 10;
+            filter: drop-shadow(0 0 10px rgba(255, 69, 0, 0.8));
+        }
+
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            max-width: 450px;
+            margin: 2rem auto;
+        }
+
+        .num-btn {
+            aspect-ratio: 1;
+            background: rgba(20, 20, 20, 0.8);
+            border: 2px solid #ff4500;
+            color: #ff4500;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 4px;
+        }
+
+        .num-btn:hover, .num-btn.selected {
+            background: #ff4500;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 69, 0, 0.5);
+            transform: translateY(-5px);
+        }
+
+        .chart-container {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--nikke-purple);
+            padding: 2rem;
+            margin: 2.5rem 0;
+            height: 250px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            gap: 10px;
+            border-radius: 8px;
+        }
+
+        .bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .bar {
+            width: 100%;
+            max-width: 35px;
+            background: var(--gold-metallic);
+            box-shadow: var(--neon-shadow-gold);
+            transition: height 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-height: 4px;
+            border-radius: 2px 2px 0 0;
+        }
+
+        .bar-label { 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 0.7rem; 
+            margin-top: 10px; 
+            color: var(--nikke-cyan);
+            font-weight: 700;
+        }
+
+        .history-ribbon {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 1.5rem;
+            background: rgba(18, 8, 8, 0.6);
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-token {
+            min-width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 900;
+            border: 2px solid;
+        }
+
+        .token-win { border-color: var(--gold-3d-main); color: var(--gold-3d-main); box-shadow: var(--neon-shadow-gold); }
+        .token-loss { border-color: var(--nikke-pink); color: var(--nikke-pink); opacity: 0.5; }
+
+        .explanation-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 5px solid var(--casino-orange);
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="page-transition">
+    <!-- Fichas HUD -->
+    <div class="chips-display">
+        <span class="chips-icon">💰</span>
+        <span class="chips-count">0</span>
+        <button class="btn-recharge" onclick="Casino.Recharge.show()" title="Recargar Fichas">+</button>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="nav-back">
+        <a href="../arcade.html" class="btn-back">← VOLVER AL MENÚ</a>
+    </nav>
+
+    <div class="game-container">
+        <!-- Título y Mito -->
+        <header style="text-align: center;">
+            <h1 class="text-golden" style="font-size: 3rem; margin-bottom: 0.5rem;">Análisis de Patrones</h1>
+            <div class="myth-box">
+                <p class="text-rush" style="font-size: 1.8rem;">"Los números tienen patrones... si observo, ganaré."</p>
+            </div>
+        </header>
+
+        <!-- Panel de Juego -->
+        <main class="game-panel" style="text-align: center;">
+            <div class="wheel-box">
+                <div class="wheel-pointer"></div>
+                <div id="wheel" class="wheel-outer"></div>
+            </div>
+
+            <h4 style="font-family: 'Orbitron'; color: var(--gold-3d-main); letter-spacing: 2px; margin-bottom: 1.5rem;">SINTONIZA TU PREDICCIÓN</h4>
+            <div class="number-grid" id="numberGrid"></div>
+            
+            <p id="selectionStatus" style="font-family: 'Orbitron'; color: var(--nikke-cyan); font-size: 0.9rem; min-height: 1.5rem;"></p>
+
+            <div class="action-buttons" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-primary" id="btnSpin" onclick="spin()">PROCESAR SEÑAL (-10)</button>
+                <button class="btn btn-danger" onclick="resetGame()">RESET</button>
+            </div>
+        </main>
+
+        <!-- Gráfico de Frecuencia -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">HISTOGRAMA DE DATOS</h2>
+            <div class="chart-container" id="chart"></div>
+            
+            <div class="history-ribbon" id="history">
+                <span style="color: var(--gray); font-family: 'Orbitron'; font-size: 0.8rem;">SISTEMA LISTO PARA ESCANEO...</span>
+            </div>
+
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div class="stat-box">
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">MUESTRAS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statHits">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">ACIERTOS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statAccuracy">0%</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">PRECISIÓN</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Educación -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">LA APREIDOLIA NUMÉRICA</h2>
+            <div class="explanation-box">
+                <p>El cerebro humano está diseñado para buscar patrones, incluso donde no existen. Ver que el "7" ha salido tres veces seguidas nos hace creer que hay una "racha" o que "está por salir".</p>
+                <p style="margin-top: 1rem;">Ambas conclusiones son trampas mentales. En un sistema aleatorio puro, <strong>cada giro es independiente</strong>. La probabilidad de que salga cualquier número es siempre exactamente del 10%, sin importar lo que haya pasado antes.</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        let gameState = { selected: null, total: 0, hits: 0, freq: Array(10).fill(0), rotation: 0, isSpinning: false };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            Casino.Chips.init(1000);
+            initUI();
+        });
+
+        function initUI() {
+            const grid = document.getElementById('numberGrid');
+            for(let i=1; i<=10; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'num-btn';
+                btn.textContent = i;
+                btn.onclick = () => select(i);
+                grid.appendChild(btn);
+            }
+
+            const wheel = document.getElementById('wheel');
+            for(let i=1; i<=10; i++) {
+                // Crear sección visual
+                const section = document.createElement('div');
+                section.className = 'wheel-section';
+                if (i % 3 === 0) section.classList.add('gold');
+                else if (i % 2 === 0) section.classList.add('even');
+                section.style.transform = `rotate(${(i-1)*36}deg)`;
+                wheel.appendChild(section);
+
+                // Crear número
+                const num = document.createElement('div');
+                num.className = 'wheel-number';
+                num.textContent = i;
+                num.style.transform = `rotate(${(i-1)*36}deg)`;
+                wheel.appendChild(num);
+            }
+            updateChart();
+        }
+
+        function select(n) {
+            if (gameState.isSpinning) return;
+            gameState.selected = n;
+            document.querySelectorAll('.num-btn').forEach(b => {
+                b.classList.toggle('selected', parseInt(b.textContent) === n);
+            });
+            document.getElementById('selectionStatus').textContent = `SEÑAL SINTONIZADA: FRECUENCIA ${n}`;
+        }
+
+        async function spin() {
+            if (gameState.isSpinning) return;
+            if (!gameState.selected) return Casino.Notifications.show('SISTEMA BLOQUEADO', 'SELECCIONA UN VALOR PARA CALIBRAR LA SEÑAL.', 'warning');
+            if (!Casino.Chips.subtract(10)) return;
+
+            gameState.isSpinning = true;
+            const result = Math.floor(Math.random() * 10) + 1;
+            
+            // Lógica de rotación corregida:
+            // Cada número N está en (N-1) * 36 grados.
+            // Para que N quede arriba (0 grados), la ruleta debe rotar hasta que (N-1)*36 + Rotación = 360 * vueltas.
+            const targetAngle = (result - 1) * 36;
+            const extraSpins = 5 + Math.floor(Math.random() * 5);
+            
+            // Calculamos cuánto falta para llegar al ángulo objetivo desde la rotación actual
+            const currentModulo = gameState.rotation % 360;
+            let distanceToTarget = (360 - targetAngle) - currentModulo;
+            if (distanceToTarget <= 0) distanceToTarget += 360;
+            
+            gameState.rotation += distanceToTarget + (extraSpins * 360);
+
+            const wheel = document.getElementById('wheel');
+            wheel.style.transform = `rotate(${gameState.rotation}deg)`;
+
+            await new Promise(r => setTimeout(r, 3000));
+
+            gameState.total++;
+            gameState.freq[result-1]++;
+            
+            const win = result === gameState.selected;
+            if (win) {
+                gameState.hits++;
+                Casino.Chips.add(20);
+                Casino.Notifications.show("SEÑAL CONFIRMADA", `SALIÓ EL VALOR ${result}. +10 FICHAS NETAS.`, 'win');
+                Casino.Animations.confetti();
+            } else {
+                Casino.Notifications.show("RUIDO DETECTADO", `SALIÓ EL VALOR ${result}. SEÑAL PERDIDA.`, 'loss');
+            }
+
+            updateHistory(result, win);
+            updateChart();
+            updateStats();
+            gameState.isSpinning = false;
+        }
+
+        function updateChart() {
+            const chart = document.getElementById('chart');
+            chart.innerHTML = '';
+            const max = Math.max(...gameState.freq, 1);
+            
+            gameState.freq.forEach((f, i) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'bar-wrapper';
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${(f/max)*100}%`;
+                const lab = document.createElement('div');
+                lab.className = 'bar-label';
+                lab.textContent = i+1;
+                wrap.appendChild(bar);
+                wrap.appendChild(lab);
+                chart.appendChild(wrap);
+            });
+        }
+
+        function updateHistory(res, win) {
+            const hist = document.getElementById('history');
+            if (gameState.total === 1) hist.innerHTML = '';
+            const token = document.createElement('div');
+            token.className = `history-token ${win ? 'token-win' : 'token-loss'}`;
+            token.textContent = res;
+            hist.prepend(token);
+        }
+
+        function updateStats() {
+            document.getElementById('statTotal').textContent = gameState.total;
+            document.getElementById('statHits').textContent = gameState.hits;
+            const acc = gameState.total > 0 ? (gameState.hits / gameState.total * 100).toFixed(1) : 0;
+            document.getElementById('statAccuracy').textContent = acc + '%';
+            Casino.Chips.updateDisplay();
+        }
+
+        function resetGame() { location.reload(); }
+    </script>
+</body>
+</html>

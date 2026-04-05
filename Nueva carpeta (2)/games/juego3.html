@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego 3 - La Carta que Nunca Sale</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estilos específicos para la mecánica de Cartas */
+        .card-selection {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            max-width: 600px;
+            margin: 2rem auto;
+        }
+
+        .card-item {
+            aspect-ratio: 2/3;
+            background: linear-gradient(145deg, #1b0a2e, #0b0116);
+            border: 2px solid var(--nikke-purple);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--white);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .card-item.selected {
+            border-color: var(--gold-3d-main);
+            box-shadow: var(--neon-shadow-gold);
+            transform: scale(1.1);
+        }
+
+        .card-item.never-shown {
+            border-color: var(--nikke-pink);
+            animation: cardGlow 2s infinite;
+        }
+
+        @keyframes cardGlow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 0, 255, 0.3); }
+            50% { box-shadow: 0 0 20px var(--nikke-pink); }
+        }
+
+        .draw-area {
+            min-height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            margin: 2rem 0;
+            border: 1px solid var(--nikke-purple);
+        }
+
+        .drawn-card {
+            width: 70px;
+            height: 100px;
+            background: var(--gold-metallic);
+            color: #000;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            box-shadow: var(--neon-shadow-gold);
+            animation: cardReveal 0.4s cubic-bezier(0.23, 1, 0.32, 1) both;
+        }
+
+        @keyframes cardReveal {
+            from { transform: scale(0) rotate(-10deg); opacity: 0; }
+            to { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .frequency-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .freq-item {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1rem;
+            border: 1px solid var(--nikke-bg-light);
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .freq-item.highlight {
+            border-color: var(--nikke-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        }
+
+        .freq-item .freq-count {
+            font-size: 1.8rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            color: var(--gold-3d-main);
+        }
+
+        .bonus-promo {
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 255, 0.2), transparent);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+            border-top: 2px solid var(--nikke-pink);
+            border-bottom: 2px solid var(--nikke-pink);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .explanation-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 5px solid var(--casino-orange);
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="page-transition">
+    <!-- Fichas HUD -->
+    <div class="chips-display">
+        <span class="chips-icon">💰</span>
+        <span class="chips-count">0</span>
+        <button class="btn-recharge" onclick="Casino.Recharge.show()" title="Recargar Fichas">+</button>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="nav-back">
+        <a href="../arcade.html" class="btn-back">← VOLVER AL MENÚ</a>
+    </nav>
+
+    <div class="game-container">
+        <!-- Título y Mito -->
+        <header style="text-align: center;">
+            <h1 class="text-golden" style="font-size: 3rem; margin-bottom: 0.5rem;">La Carta que Nunca Sale</h1>
+            <div class="myth-box">
+                <p class="text-rush" style="font-size: 1.8rem;">"Si no ha salido, ahora tiene más chance..."</p>
+            </div>
+        </header>
+
+        <!-- Panel de Juego -->
+        <main class="game-panel" style="text-align: center;">
+            <h4 style="font-family: 'Orbitron'; color: var(--gold-3d-main); letter-spacing: 2px;">SELECCIONA TU CARTA OBJETIVO</h4>
+            <div class="card-selection" id="cardSelection"></div>
+            
+            <p id="selectedCardText" style="font-family: 'Orbitron'; color: var(--nikke-cyan); font-size: 0.9rem; min-height: 1.5rem; margin: 1rem 0;">SELECCIONA UNA CARTA PARA COMENZAR</p>
+
+            <div class="bonus-promo" id="bonusPromo" style="display: none;">
+                <h3 style="color: var(--nikke-pink); font-size: 1.2rem; letter-spacing: 2px;">⚠️ ¡SISTEMA DE MEMORIA DETECTADO!</h3>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--white);">LAS CARTAS QUE NO HAN SALIDO PAGAN <span class="text-golden" style="font-size: 1rem;">TRIPLE (x3)</span></p>
+            </div>
+
+            <div class="action-buttons" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-primary" id="btnDraw1" onclick="drawCards(1)">ROBAR 1 (-10)</button>
+                <button class="btn btn-primary" style="background: var(--nikke-purple); border-color: var(--nikke-pink);" id="btnDraw20" onclick="drawCards(20)">ROBAR 20 (-200)</button>
+                <button class="btn btn-danger" onclick="resetGame()">RESET</button>
+            </div>
+
+            <div class="draw-area" id="drawArea">
+                <span style="color: var(--gray); font-family: 'Orbitron'; font-size: 0.8rem;">ESPERANDO EXTRACCIÓN...</span>
+            </div>
+        </main>
+
+        <!-- Estadísticas -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">ANÁLISIS DE FRECUENCIA</h2>
+            <div class="frequency-grid" id="frequencyGrid"></div>
+            
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2rem;">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalDraws">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">ROBOS TOTALES</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="totalHits">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">ACIERTOS LOGRADOS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="changedCards">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">CAMBIOS ESTRATEGIA</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Educación -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">SIN MEMORIA, SIN PATRÓN</h2>
+            <div class="explanation-box">
+                <p>En un mazo que se baraja tras cada intento, <strong>cada carta tiene un 5% de probabilidad</strong> de salir, sin importar lo que haya pasado antes.</p>
+                <p style="margin-top: 1rem;">El cerebro humano busca patrones donde no los hay. Que una carta no haya salido en mucho tiempo no la hace más "probable" en el siguiente robo. <strong>Las matemáticas no compensan la suerte.</strong></p>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        let gameState = { selectedCard: null, totalDraws: 0, totalHits: 0, changedCards: 0, cardFrequency: {}, isDrawing: false };
+        const TOTAL_CARDS = 20;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            Casino.Chips.init();
+            initCards();
+            updateFrequencyUI();
+        });
+
+        function initCards() {
+            const container = document.getElementById('cardSelection');
+            container.innerHTML = '';
+            for (let i = 1; i <= TOTAL_CARDS; i++) {
+                const card = document.createElement('div');
+                card.className = 'card-item';
+                card.id = `card-${i}`;
+                card.innerHTML = `<span>${i}</span>`;
+                card.onclick = () => selectCard(i);
+                container.appendChild(card);
+                gameState.cardFrequency[i] = 0;
+            }
+        }
+
+        function selectCard(num) {
+            if (gameState.isDrawing) return;
+            if (gameState.selectedCard && gameState.selectedCard !== num) gameState.changedCards++;
+            gameState.selectedCard = num;
+            document.querySelectorAll('.card-item').forEach(c => c.classList.remove('selected'));
+            document.getElementById(`card-${num}`).classList.add('selected');
+            
+            const isNeverShown = gameState.cardFrequency[num] === 0 && gameState.totalDraws > 0;
+            document.getElementById('selectedCardText').textContent = `OBJETIVO: CARTA ${num} ${isNeverShown ? '[BONUS x3 ACTIVADO]' : ''}`;
+        }
+
+        async function drawCards(count) {
+            if (gameState.isDrawing) return;
+            if (!gameState.selectedCard) return Casino.Notifications.show('SISTEMA BLOQUEADO', 'SELECCIONA TU CARTA OBJETIVO ANTES DE COMENZAR.', 'warning');
+
+            const cost = count === 1 ? 10 : 200;
+            if (!Casino.Chips.subtract(cost)) return;
+
+            gameState.isDrawing = true;
+            const area = document.getElementById('drawArea');
+            area.innerHTML = '';
+            
+            let hits = 0;
+            const neverShownBefore = Object.keys(gameState.cardFrequency).filter(k => gameState.cardFrequency[k] === 0).map(Number);
+            const isBonusPick = neverShownBefore.includes(gameState.selectedCard);
+
+            for (let i = 0; i < count; i++) {
+                const result = Math.floor(Math.random() * TOTAL_CARDS) + 1;
+                gameState.cardFrequency[result]++;
+                gameState.totalDraws++;
+
+                const cardEl = document.createElement('div');
+                cardEl.className = 'drawn-card';
+                cardEl.textContent = result;
+                if (result === gameState.selectedCard) {
+                    hits++;
+                    cardEl.style.boxShadow = '0 0 20px var(--nikke-cyan)';
+                }
+                area.appendChild(cardEl);
+
+                if (count === 1) await new Promise(r => setTimeout(r, 500));
+                else if (i % 5 === 0) await new Promise(r => setTimeout(r, 100));
+            }
+
+            if (hits > 0) {
+                const reward = hits * (isBonusPick ? 30 : 20);
+                Casino.Chips.add(reward);
+                Casino.Notifications.show("SISTEMA BURLEADO", `CONSEGUISTE ${hits} CARTAS OBJETIVO. +${reward} FICHAS`, 'win');
+                Casino.Animations.confetti();
+                gameState.totalHits += hits;
+            } else if (count === 1) {
+                Casino.Notifications.show("SIN RASTRO", "TU CARTA NO APARECIÓ EN EL ESCANEO ACTUAL.", 'loss');
+            }
+
+            updateFrequencyUI();
+            updateStats();
+            checkBonus();
+            gameState.isDrawing = false;
+        }
+
+        function updateFrequencyUI() {
+            const grid = document.getElementById('frequencyGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            for (let i = 1; i <= TOTAL_CARDS; i++) {
+                const item = document.createElement('div');
+                item.className = 'freq-item';
+                if (i === gameState.selectedCard) item.classList.add('highlight');
+                item.innerHTML = `<div style="font-size: 0.6rem; color: var(--nikke-cyan); font-family: 'Orbitron';">ID-${i}</div><div class="freq-count">${gameState.cardFrequency[i]}</div>`;
+                grid.appendChild(item);
+            }
+        }
+
+        function checkBonus() {
+            const neverShown = Object.keys(gameState.cardFrequency).filter(k => gameState.cardFrequency[k] === 0).map(Number);
+            const promo = document.getElementById('bonusPromo');
+            
+            document.querySelectorAll('.card-item').forEach(c => {
+                const num = parseInt(c.id.split('-')[1]);
+                c.classList.remove('never-shown');
+                if (neverShown.includes(num) && gameState.totalDraws > 0) c.classList.add('never-shown');
+            });
+
+            promo.style.display = (neverShown.length > 0 && gameState.totalDraws > 0) ? 'block' : 'none';
+        }
+
+        function updateStats() {
+            document.getElementById('totalDraws').textContent = gameState.totalDraws;
+            document.getElementById('totalHits').textContent = gameState.totalHits;
+            document.getElementById('changedCards').textContent = gameState.changedCards;
+            Casino.Chips.updateDisplay();
+        }
+
+        function resetGame() { location.reload(); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego 5 - Reclutamiento Probabilístico</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estilos específicos para la mecánica de Reclutamiento */
+        .pod-container {
+            position: relative;
+            width: 280px;
+            height: 380px;
+            margin: 2rem auto;
+            background: rgba(27, 10, 46, 0.6);
+            border: 2px solid var(--nikke-purple);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(157, 0, 255, 0.2);
+        }
+
+        .pod-display {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--nikke-bg-light), #000);
+            border: 4px solid var(--nikke-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background-size: 85%;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .pod-display.scanning {
+            animation: scanAnim 0.2s infinite alternate;
+            /* Más rápido para la ráfaga */
+            border-color: var(--nikke-pink);
+            box-shadow: var(--neon-pink-shadow);
+            filter: brightness(1.5) contrast(1.2);
+        }
+
+        @keyframes scanAnim {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.05);
+            }
+        }
+
+        .pod-display.win {
+            border-color: var(--gold-3d-main);
+            box-shadow: 0 0 50px var(--gold-3d-main);
+            background-color: rgba(255, 202, 40, 0.2);
+            animation: winPulse 0.5s ease infinite alternate;
+        }
+
+        @keyframes winPulse {
+            from {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+
+            to {
+                transform: scale(1.1);
+                filter: brightness(1.4);
+            }
+        }
+
+        .prob-badge {
+            margin-top: 2rem;
+            padding: 0.8rem 2rem;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--nikke-cyan);
+            color: var(--nikke-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background: #111;
+            border: 1px solid var(--nikke-purple);
+            margin: 1.5rem 0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--nikke-pink);
+            box-shadow: var(--neon-pink-shadow);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .history-dots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 1.5rem;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 4px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #333;
+        }
+
+        .dot.miss {
+            border: 1px solid var(--nikke-purple);
+            opacity: 0.6;
+        }
+
+        .dot.hit {
+            border: 1px solid var(--gold-3d-main);
+            box-shadow: var(--neon-shadow-gold);
+        }
+
+        .explanation-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 5px solid var(--casino-orange);
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body class="page-transition">
+    <!-- Fichas HUD -->
+    <div class="chips-display">
+        <span class="chips-icon">💰</span>
+        <span class="chips-count">0</span>
+        <button class="btn-recharge" onclick="Casino.Recharge.show()" title="Recargar Fichas">+</button>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="nav-back">
+        <a href="../arcade.html" class="btn-back">← VOLVER AL MENÚ</a>
+    </nav>
+
+    <div class="game-container">
+        <!-- Título y Mito -->
+        <header style="text-align: center;">
+            <h1 class="text-golden" style="font-size: 3rem; margin-bottom: 0.5rem;">¿La Suerte Mejora?</h1>
+            <div class="myth-box">
+                <p class="text-rush" style="font-size: 1.8rem;">"Si intento muchas veces, seguro lo logro..."</p>
+            </div>
+        </header>
+
+        <!-- Panel de Juego -->
+        <main class="game-panel" style="text-align: center;">
+            <div class="pod-container">
+                <div class="pod-display" id="pod" style="background-image: url('../images/ssr.png');"></div>
+                <div class="prob-badge">RATE: 5.0%</div>
+            </div>
+
+            <div class="action-buttons" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-primary" id="btnSingle" onclick="recruit(1)">RECLUTAR x1 (-10)</button>
+                <button class="btn btn-primary"
+                    style="background: var(--nikke-purple); border-color: var(--nikke-pink);" id="btnMulti"
+                    onclick="recruit(10)">RECLUTAR x10 (-100)</button>
+                <button class="btn btn-danger" onclick="resetGame()">RESET</button>
+            </div>
+        </main>
+
+        <!-- Estadísticas -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">REGISTRO DE ESCANEO</h2>
+
+            <p style="font-family: 'Orbitron'; font-size: 0.7rem; color: var(--nikke-cyan); letter-spacing: 1px;">
+                PROGRESO DE PROBABILIDAD ACUMULADA:</p>
+            <div class="progress-container">
+                <div class="progress-fill" id="progFill"></div>
+            </div>
+
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalRecruits">0</div>
+                    <div class="stat-label"
+                        style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">INTENTOS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="totalWins">0</div>
+                    <div class="stat-label"
+                        style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">PREMIOS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="realRate">0%</div>
+                    <div class="stat-label"
+                        style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">TASA REAL</div>
+                </div>
+            </div>
+
+            <div class="history-dots" id="dotContainer"></div>
+        </section>
+
+        <!-- Educación -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">LA FALACIA DEL MONTECARLO</h2>
+            <div class="explanation-box">
+                <p>Mucha gente cree que cada fallo los acerca más al éxito. Esto es un error matemático fatal. En un
+                    sistema digital, cada intento es <strong>completamente nuevo e independiente</strong>.</p>
+                <p style="margin-top: 1rem;">Tener un 5% de probabilidad significa que tienes un 95% de fallar
+                    <strong>siempre</strong>. No importa si has fallado 100 veces; en el intento 101, tu probabilidad de
+                    fallar sigue siendo del 95%. <strong>La suerte no tiene memoria.</strong>
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        let gameState = { total: 0, wins: 0, history: [], isProcessing: false };
+        const PROB = 0.05;
+
+        // Assets
+        const IMG_DORO = '../images/doro-meme-viktor-v0-q7c2l74vf5xe1.webp';
+        const WIN_IMAGES = [
+            '../images/goddess-of-victory-nikke-chibi-badge-collection-box-of-12-sega-.webp',
+            '../images/goddess-of-victory-nikke-chibi-badge-collection-box-of-12-sega- (3).webp',
+            '../images/goddess-of-victory-nikke-chibi-badge-collection-box-of-12-sega- (2).webp',
+            '../images/goddess-of-victory-nikke-chibi-badge-collection-box-of-12-sega- (1).webp'
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            Casino.Chips.init(1000);
+            updateUI();
+        });
+
+        async function recruit(times) {
+            if (gameState.isProcessing) return;
+            const cost = times * 10;
+            if (!Casino.Chips.subtract(cost)) return;
+
+            gameState.isProcessing = true;
+            const pod = document.getElementById('pod');
+            pod.classList.add('scanning');
+
+            // EFECTO DIAPOSITIVAS: Ráfaga rápida de imágenes de premios
+            const slideshowInterval = setInterval(() => {
+                const randomImg = WIN_IMAGES[Math.floor(Math.random() * WIN_IMAGES.length)];
+                pod.style.backgroundImage = `url('${randomImg}')`;
+            }, 80);
+
+            await new Promise(r => setTimeout(r, 1500));
+            clearInterval(slideshowInterval);
+
+            let hitsThisRound = 0;
+            let resultsArray = [];
+            let lastWinImg = null;
+
+            for (let i = 0; i < times; i++) {
+                const win = Math.random() < PROB;
+                gameState.total++;
+
+                let currentImg = win ? WIN_IMAGES[Math.floor(Math.random() * WIN_IMAGES.length)] : IMG_DORO;
+
+                gameState.history.push({ win, img: currentImg });
+                resultsArray.push({ img: currentImg, type: win ? 'hit' : 'miss' });
+
+                if (win) {
+                    gameState.wins++;
+                    hitsThisRound++;
+                    Casino.Chips.add(200);
+                    lastWinImg = currentImg;
+                }
+            }
+
+            pod.classList.remove('scanning');
+
+            if (hitsThisRound > 0) {
+                pod.classList.add('win');
+                pod.style.backgroundImage = `url('${lastWinImg}')`;
+                Casino.Notifications.show("¡CRÍTICO DETECTADO!", "¡ALERTA! UNIDAD DE ÉLITE LOCALIZADA EN EL SECTOR.", 'win', hitsThisRound * 200, resultsArray);
+                Casino.Animations.confetti();
+                setTimeout(() => pod.classList.remove('win'), 3000);
+            } else {
+                pod.style.backgroundImage = `url('${IMG_DORO}')`;
+                Casino.Notifications.show("INFESTACIÓN DETECTADA", "EL ESCANEO SOLO MOSTRÓ UNA PLAGA DE DOROS.", 'error', -cost, resultsArray);
+            }
+
+            updateUI();
+            gameState.isProcessing = false;
+        }
+
+        function updateUI() {
+            document.getElementById('totalRecruits').textContent = gameState.total;
+            document.getElementById('totalWins').textContent = gameState.wins;
+            const rate = gameState.total > 0 ? (gameState.wins / gameState.total * 100).toFixed(1) : 0;
+            document.getElementById('realRate').textContent = rate + '%';
+
+            const fill = Math.min((gameState.total / 100) * 100, 100);
+            document.getElementById('progFill').style.width = fill + '%';
+
+            const container = document.getElementById('dotContainer');
+            container.innerHTML = '';
+            const historyToShow = gameState.history.slice(-100);
+            historyToShow.forEach(h => {
+                const d = document.createElement('div');
+                d.className = 'dot ' + (h.win ? 'hit' : 'miss');
+                d.style.backgroundImage = `url('${h.img}')`;
+                container.appendChild(d);
+            });
+            Casino.Chips.updateDisplay();
+        }
+
+        function resetGame() { location.reload(); }
+    </script>
+</body>
+
+</html>

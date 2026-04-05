@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego 8 - La Ilusión de la Precisión</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estilos específicos para la mecánica de Tragamonedas */
+        .slot-machine-panel {
+            background: linear-gradient(180deg, #1b0a2e 0%, #0b0116 100%);
+            border: 4px solid var(--nikke-purple);
+            border-radius: 8px;
+            padding: 2.5rem;
+            margin: 2rem auto;
+            max-width: 550px;
+            box-shadow: var(--neon-purple-shadow);
+            position: relative;
+        }
+
+        .slot-machine-panel::before {
+            content: 'NEON SLOTS SYSTEM';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--nikke-bg);
+            padding: 0 1.5rem;
+            color: var(--gold-3d-main);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 4px;
+            text-shadow: var(--neon-shadow-gold);
+            border: 1px solid var(--gold-3d-main);
+            border-radius: 20px;
+        }
+
+        .slots-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 2.5rem 0;
+        }
+
+        .slot-reel {
+            width: 110px;
+            height: 150px;
+            background: #000;
+            border: 3px solid var(--nikke-cyan);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 25px rgba(0, 229, 255, 0.2);
+        }
+
+        .slot-reel img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .slot-reel.spinning {
+            animation: reelSpin 0.1s linear infinite;
+        }
+
+        @keyframes reelSpin {
+            0% {
+                transform: translateY(0);
+                filter: blur(5px);
+            }
+
+            100% {
+                transform: translateY(-30px);
+                filter: blur(15px);
+            }
+        }
+
+        .slot-reel.win-glow {
+            border-color: var(--gold-3d-main);
+            box-shadow: var(--neon-shadow-gold);
+            animation: winPulse 0.5s infinite alternate;
+        }
+
+        @keyframes winPulse {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.08);
+            }
+        }
+
+        .near-miss-indicator {
+            height: 50px;
+            margin-bottom: 1rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 900;
+        }
+
+        .paytable-mini {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 2rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: var(--nikke-cyan);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+        }
+
+        .paytable-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .paytable-img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+        .explanation-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 5px solid var(--casino-orange);
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body class="page-transition">
+    <!-- Fichas HUD -->
+    <div class="chips-display">
+        <span class="chips-icon">💰</span>
+        <span class="chips-count">0</span>
+        <button class="btn-recharge" onclick="Casino.Recharge.show()" title="Recargar Fichas">+</button>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="nav-back">
+        <a href="../arcade.html" class="btn-back">← VOLVER AL MENÚ</a>
+    </nav>
+
+    <div class="game-container">
+        <!-- Título y Mito -->
+        <header style="text-align: center;">
+            <h1 class="text-golden" style="font-size: 3rem; margin-bottom: 0.5rem;">La Ilusión de la Precisión</h1>
+            <div class="myth-box">
+                <p class="text-rush" style="font-size: 1.8rem;">"Si casi gano, significa que estoy cerca..."</p>
+            </div>
+        </header>
+
+        <!-- Panel de Juego -->
+        <main class="game-panel" style="text-align: center;">
+            <div class="slot-machine-panel">
+                <div class="near-miss-indicator" id="nearMissText"></div>
+
+                <div class="slots-container">
+                    <div id="reel1" class="slot-reel">❓</div>
+                    <div id="reel2" class="slot-reel">❓</div>
+                    <div id="reel3" class="slot-reel">❓</div>
+                </div>
+
+                <div class="action-buttons" style="display: flex; gap: 1rem; justify-content: center;">
+                    <button class="btn btn-primary" id="btnSpin" onclick="spin()">GIRAR (-10)</button>
+                    <button class="btn btn-danger" onclick="resetGame()">RESET</button>
+                </div>
+
+                <div class="paytable-mini">
+                    <div class="paytable-item"
+                        style="border-right: 1px solid rgba(255, 255, 255, 0.1); color: var(--gold-3d-main);">
+                        <img src="../images/doro-meme-viktor-v0-q7c2l74vf5xe1.webp" class="paytable-img">
+                        <img src="../images/doro-meme-viktor-v0-q7c2l74vf5xe1.webp" class="paytable-img">
+                        <img src="../images/doro-meme-viktor-v0-q7c2l74vf5xe1.webp" class="paytable-img">
+                        : +1000
+                    </div>
+                    <div class="paytable-item">💎💎💎 : +500</div>
+                    <div class="paytable-item" style="border-right: 1px solid rgba(255, 255, 255, 0.1);">⭐⭐⭐ : +200
+                    </div>
+                    <div class="paytable-item">🍒🍒🍒 : +100</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Estadísticas -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">REGISTRO DE EVENTOS</h2>
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                <div class="stat-box">
+                    <div class="stat-value" id="statSpins">0</div>
+                    <div class="stat-label"
+                        style="font-family: 'Orbitron'; font-size: 0.5rem; color: var(--nikke-cyan);">GIROS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statWins">0</div>
+                    <div class="stat-label"
+                        style="font-family: 'Orbitron'; font-size: 0.5rem; color: var(--nikke-cyan);">JACKPOTS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statNearMiss">0</div>
+                    <div class="stat-label"
+                        style="font-family: 'Orbitron'; font-size: 0.5rem; color: var(--nikke-cyan);">NEAR MISS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statRate">0%</div>
+                    <div class="stat-label"
+                        style="font-family: 'Orbitron'; font-size: 0.5rem; color: var(--nikke-cyan);">TASA ÉXITO</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Educación -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">EL EFECTO "NEAR MISS"</h2>
+            <div class="explanation-box">
+                <p>Las máquinas tragamonedas están programadas para mostrar combinaciones que "casi" ganan. Ver dos
+                    cerezas y un diamante activa los mismos centros de recompensa en tu cerebro que ganar el premio
+                    real.</p>
+                <p style="margin-top: 1rem;">La realidad estadística es que un <strong>"Casi Gano" es exactamente igual
+                        a una derrota total</strong>. Estar cerca no aumenta tus probabilidades en el siguiente giro.
+                    Cada jugada es un evento independiente sin memoria del pasado.</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        // Assets y Premios
+        const DORO_IMG = '../images/doro-meme-viktor-v0-q7c2l74vf5xe1.webp';
+        const SYMBOLS = ['💎', '⭐', '🍒', '🍋', 'DORO'];
+        const PRIZES = { 'DORO': 1000, '💎': 500, '⭐': 200, '🍒': 100, '🍋': 50 };
+
+        let gameState = { spins: 0, wins: 0, nearMisses: 0, isSpinning: false };
+
+        async function spin() {
+            if (gameState.isSpinning) return;
+            if (!Casino.Chips.subtract(10)) return;
+
+            gameState.isSpinning = true;
+            gameState.spins++;
+            const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+            const text = document.getElementById('nearMissText');
+            const btn = document.getElementById('btnSpin');
+
+            btn.disabled = true;
+            reels.forEach(r => {
+                r.classList.add('spinning');
+                r.classList.remove('win-glow');
+                r.innerHTML = '❓';
+            });
+            text.textContent = 'ESCANEO EN CURSO...';
+
+            await new Promise(r => setTimeout(r, 1500));
+
+            // Generar resultados
+            const results = reels.map(() => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+
+            // Renderizar resultados
+            reels.forEach((r, i) => {
+                r.classList.remove('spinning');
+                const res = results[i];
+                if (res === 'DORO') {
+                    r.innerHTML = `<img src="${DORO_IMG}" alt="DORO">`;
+                } else {
+                    r.textContent = res.substring(0, 2); // Limpiar para visualización si es emoji doble
+                }
+            });
+
+            const win = results[0] === results[1] && results[1] === results[2];
+            const nearMiss = (results[0] === results[1] || results[1] === results[2] || results[0] === results[2]) && !win;
+
+            if (win) {
+                gameState.wins++;
+                const prize = PRIZES[results[0]];
+                Casino.Chips.add(prize);
+                reels.forEach(r => r.classList.add('win-glow'));
+
+                const winName = results[0] === 'DORO' ? '¡INFESTACIÓN DORO JACKPOT!' : '¡JACKPOT DETECTADO!';
+                text.innerHTML = `<span class="text-golden">${winName} +${prize}</span>`;
+
+                const resultsArray = results.map(r => ({
+                    img: r === 'DORO' ? DORO_IMG : null,
+                    icon: r === 'DORO' ? null : r.substring(0, 2),
+                    type: 'hit'
+                }));
+
+                Casino.Notifications.show("✨ SISTEMA COMPROMETIDO ✨", "¡ENHORABUENA COMMANDER!", 'win', prize, resultsArray);
+                Casino.Animations.confetti();
+            } else if (nearMiss) {
+                gameState.nearMisses++;
+                text.innerHTML = `<span style="color: var(--nikke-cyan);">¡POR POCO!</span>`;
+
+                const resultsArray = results.map(r => ({
+                    img: r === 'DORO' ? DORO_IMG : null,
+                    icon: r === 'DORO' ? null : r.substring(0, 2),
+                    type: 'info'
+                }));
+
+                Casino.Notifications.show("😅 ¡CERCA!", " SIGUE INTENTANDO.", 'info', null, resultsArray);
+            } else {
+                text.textContent = '';
+                const resultsArray = results.map(r => ({
+                    img: r === 'DORO' ? DORO_IMG : null,
+                    icon: r === 'DORO' ? null : r.substring(0, 2),
+                    type: 'loss'
+                }));
+                Casino.Notifications.show("❌ NADA AUN...", "SIGUE INTENTANDO", 'loss', -10, resultsArray);
+            }
+
+            updateStats();
+            gameState.isSpinning = false;
+            btn.disabled = false;
+        }
+
+        function updateStats() {
+            document.getElementById('statSpins').textContent = gameState.spins;
+            document.getElementById('statWins').textContent = gameState.wins;
+            document.getElementById('statNearMiss').textContent = gameState.nearMisses;
+            const rate = gameState.spins > 0 ? (gameState.wins / gameState.spins * 100).toFixed(1) : 0;
+            document.getElementById('statRate').textContent = rate + '%';
+            Casino.Chips.updateDisplay();
+        }
+
+        function resetGame() { location.reload(); }
+        document.addEventListener('DOMContentLoaded', () => { Casino.Chips.init(); });
+    </script>
+</body>
+
+</html>

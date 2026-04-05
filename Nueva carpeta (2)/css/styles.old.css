@@ -1,0 +1,790 @@
+/* ============================================
+   CASINO STYLE - Minijuegos de Probabilidad
+   ============================================ */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap');
+
+/* CSS Variables */
+:root {
+    --bg-dark: #0f0f1a;
+    --bg-medium: #1a1a2e;
+    --bg-light: #25253d;
+    --gold: #ffd700;
+    --gold-dark: #b8860b;
+    --gold-light: #ffed4a;
+    --red-casino: #dc143c;
+    --red-dark: #8b0000;
+    --green-casino: #006400;
+    --green-light: #228b22;
+    --white: #f5f5f5;
+    --gray: #a0a0a0;
+    --shadow-gold: 0 0 20px rgba(255, 215, 0, 0.3);
+    --shadow-red: 0 0 20px rgba(220, 20, 60, 0.3);
+    --shadow-green: 0 0 20px rgba(34, 139, 34, 0.3);
+}
+
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-medium) 50%, var(--bg-light) 100%);
+    min-height: 100vh;
+    color: var(--white);
+    line-height: 1.6;
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+    font-family: 'Playfair Display', serif;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(180deg, var(--bg-dark) 0%, transparent 100%);
+    padding: 2rem;
+    text-align: center;
+    border-bottom: 2px solid var(--gold);
+    box-shadow: var(--shadow-gold);
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    color: var(--gold);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0.5rem;
+}
+
+.header p {
+    color: var(--gray);
+    font-size: 1.1rem;
+}
+
+/* Container */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Navigation */
+.nav-back {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(145deg, var(--bg-light), var(--bg-dark));
+    color: var(--gold);
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    text-decoration: none;
+    border: 2px solid var(--gold);
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    background: var(--gold);
+    color: var(--bg-dark);
+    box-shadow: var(--shadow-gold);
+}
+
+/* Games Grid */
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+/* Game Card */
+.game-card {
+    background: linear-gradient(145deg, var(--bg-light), var(--bg-medium));
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.game-card:hover {
+    border-color: var(--gold);
+    box-shadow: var(--shadow-gold);
+    transform: translateY(-5px);
+}
+
+.game-card:hover::before {
+    opacity: 1;
+}
+
+.game-card h3 {
+    color: var(--gold);
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.game-card .myth {
+    font-style: italic;
+    color: var(--gray);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border-left: 3px solid var(--red-casino);
+}
+
+.game-card p {
+    color: var(--white);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 500;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: linear-gradient(145deg, var(--gold), var(--gold-dark));
+    color: var(--bg-dark);
+}
+
+.btn-primary:hover {
+    box-shadow: var(--shadow-gold);
+    transform: scale(1.05);
+}
+
+.btn-secondary {
+    background: linear-gradient(145deg, var(--bg-light), var(--bg-dark));
+    color: var(--gold);
+    border: 2px solid var(--gold);
+}
+
+.btn-secondary:hover {
+    background: var(--gold);
+    color: var(--bg-dark);
+}
+
+.btn-danger {
+    background: linear-gradient(145deg, var(--red-casino), var(--red-dark));
+    color: var(--white);
+}
+
+.btn-danger:hover {
+    box-shadow: var(--shadow-red);
+}
+
+.btn-success {
+    background: linear-gradient(145deg, var(--green-light), var(--green-casino));
+    color: var(--white);
+}
+
+.btn-success:hover {
+    box-shadow: var(--shadow-green);
+}
+
+/* Chips/Money Display */
+.chips-display {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background: linear-gradient(145deg, var(--bg-light), var(--bg-dark));
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    border: 2px solid var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 100;
+}
+
+.chips-display .chips-icon {
+    font-size: 1.5rem;
+}
+
+.chips-display .chips-count {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--gold);
+}
+
+/* Game Container */
+.game-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.game-title {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.game-title h2 {
+    color: var(--gold);
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.game-title .myth-box {
+    background: rgba(220, 20, 60, 0.2);
+    border: 1px solid var(--red-casino);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.game-title .myth-box h4 {
+    color: var(--red-casino);
+    margin-bottom: 0.5rem;
+}
+
+.game-title .myth-box p {
+    font-style: italic;
+    color: var(--gray);
+}
+
+/* Game Panel */
+.game-panel {
+    background: linear-gradient(145deg, var(--bg-light), var(--bg-medium));
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* Statistics Panel */
+.stats-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-box {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-box .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gold);
+}
+
+.stat-box .stat-label {
+    font-size: 0.85rem;
+    color: var(--gray);
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    margin: 1.5rem 0;
+}
+
+/* Selection Buttons */
+.selection-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn-selection {
+    padding: 0.5rem 1.5rem;
+    background: var(--bg-dark);
+    border: 2px solid var(--gray);
+    color: var(--white);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-selection.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    box-shadow: var(--shadow-gold);
+}
+
+.btn-selection:hover {
+    border-color: var(--gold);
+}
+
+/* History */
+.history-container {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1rem 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.history-title {
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.history-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.history-item {
+    padding: 0.25rem 0.75rem;
+    border-radius: 5px;
+    font-size: 0.85rem;
+}
+
+.history-item.cara {
+    background: var(--gold);
+    color: var(--bg-dark);
+}
+
+.history-item.cruz {
+    background: var(--red-casino);
+    color: var(--white);
+}
+
+/* Conclusion */
+.conclusion {
+    background: linear-gradient(145deg, var(--green-casino), #004d00);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    border: 2px solid var(--green-light);
+}
+
+.conclusion h4 {
+    color: var(--gold-light);
+    margin-bottom: 0.5rem;
+}
+
+.conclusion p {
+    color: var(--white);
+}
+
+/* Animation Classes */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: var(--shadow-gold); }
+    50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.5); }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+.bounce {
+    animation: bounce 0.5s ease;
+}
+
+.pulse {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+.glow {
+    animation: glow 1.5s ease-in-out infinite;
+}
+
+/* Coin Animation */
+.coin-container {
+    perspective: 1000px;
+    width: 120px;
+    height: 120px;
+    margin: 2rem auto;
+}
+
+.coin {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 1s ease;
+}
+
+.coin.flipping {
+    animation: coinFlip 1s ease;
+}
+
+.coin-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    backface-visibility: hidden;
+    border: 4px solid;
+}
+
+.coin-face.cara {
+    background: linear-gradient(145deg, #ffd700, #b8860b);
+    color: #1a1a2e;
+    border-color: #8b7500;
+}
+
+.coin-face.cruz {
+    background: linear-gradient(145deg, #c0c0c0, #808080);
+    color: #1a1a2e;
+    border-color: #505050;
+    transform: rotateY(180deg);
+}
+
+@keyframes coinFlip {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(1800deg); }
+}
+
+/* Roulette */
+.roulette-container {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    margin: 2rem auto;
+}
+
+.roulette-wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 8px solid var(--gold);
+    background: conic-gradient(
+        var(--red-casino) 0deg 36deg,
+        #1a1a2e 36deg 72deg,
+        var(--red-casino) 72deg 108deg,
+        #1a1a2e 108deg 144deg,
+        var(--red-casino) 144deg 180deg,
+        #1a1a2e 180deg 216deg,
+        var(--red-casino) 216deg 252deg,
+        #1a1a2e 252deg 288deg,
+        var(--red-casino) 288deg 324deg,
+        #1a1a2e 324deg 360deg
+    );
+    box-shadow: var(--shadow-gold);
+    transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+}
+
+.roulette-pointer {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-top: 30px solid var(--gold);
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+}
+
+/* Card Styles */
+.card {
+    width: 80px;
+    height: 112px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #fff, #e0e0e0);
+    border: 2px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1a1a2e;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-gold);
+}
+
+.card.selected {
+    border-color: var(--gold);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+}
+
+.card-back {
+    background: linear-gradient(145deg, var(--red-casino), var(--red-dark));
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 255, 255, 0.1) 10px,
+        rgba(255, 255, 255, 0.1) 20px
+    );
+}
+
+/* Slot Machine */
+.slot-machine {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 2rem auto;
+}
+
+.slot-reel {
+    width: 80px;
+    height: 100px;
+    background: linear-gradient(145deg, #fff, #e0e0e0);
+    border: 3px solid var(--gold);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3), var(--shadow-gold);
+    overflow: hidden;
+}
+
+.slot-reel.spinning {
+    animation: slotSpin 0.5s linear infinite;
+}
+
+@keyframes slotSpin {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-100px); }
+}
+
+/* Grid for contagion game */
+.person-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    max-width: 400px;
+    margin: 1rem auto;
+}
+
+.person {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: var(--bg-light);
+    border: 2px solid var(--gray);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.person.healthy {
+    background: var(--green-casino);
+    border-color: var(--green-light);
+}
+
+.person.infected {
+    background: var(--red-casino);
+    border-color: var(--red-dark);
+}
+
+.person.possible {
+    background: #ff9800;
+    border-color: #ff5722;
+}
+
+/* Progress Bar */
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+/* Loot Box */
+.loot-box {
+    width: 150px;
+    height: 150px;
+    margin: 2rem auto;
+    background: linear-gradient(145deg, #4a0080, #8b00ff);
+    border: 4px solid var(--gold);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-gold);
+}
+
+.loot-box:hover {
+    transform: scale(1.05);
+}
+
+.loot-box.opening {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    25% { transform: translateX(-10px) rotate(-5deg); }
+    75% { transform: translateX(10px) rotate(5deg); }
+}
+
+/* Result Message */
+.result-message {
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 1.2rem;
+    margin: 1rem 0;
+    animation: fadeIn 0.5s ease;
+}
+
+.result-message.win {
+    background: linear-gradient(145deg, var(--green-casino), var(--green-light));
+    border: 2px solid #4caf50;
+}
+
+.result-message.lose {
+    background: linear-gradient(145deg, var(--red-dark), var(--red-casino));
+    border: 2px solid #f44336;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Chart Container */
+.chart-container {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.8rem;
+    }
+
+    .container {
+        padding: 1rem;
+    }
+
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .game-panel {
+        padding: 1rem;
+    }
+
+    .chips-display {
+        position: relative;
+        top: 0;
+        right: 0;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .nav-back {
+        position: relative;
+        top: 0;
+        left: 0;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+}
+
+/* Number display */
+.number-display {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-shadow: 2px 2px 10px rgba(255, 215, 0, 0.5);
+    text-align: center;
+    margin: 1rem 0;
+}
+
+/* Rarity Colors */
+.rarity-common { color: #9e9e9e; }
+.rarity-rare { color: #2196f3; }
+.rarity-epic { color: #9c27b0; }
+.rarity-legendary { color: #ff9800; }
+
+/* Confetti animation placeholder */
+.confetti {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+}

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOLDEN COIN RUSH - Nikke Probabilidad</title>
+    <link rel="icon" href="images/Golden_Coin_Rush_logo.webp" type="image/webp">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body class="page-transition menu-page">
+    <header class="header">
+        <div class="marquee-lights">
+            <div class="light-dot" style="top: 10px; left: 10%;"></div>
+            <div class="light-dot" style="top: 10px; left: 30%;"></div>
+            <div class="light-dot" style="top: 10px; left: 50%;"></div>
+            <div class="light-dot" style="top: 10px; left: 70%;"></div>
+            <div class="light-dot" style="top: 10px; left: 90%;"></div>
+            <div class="light-dot" style="bottom: 10px; left: 10%;"></div>
+            <div class="light-dot" style="bottom: 10px; left: 30%;"></div>
+            <div class="light-dot" style="bottom: 10px; left: 50%;"></div>
+            <div class="light-dot" style="bottom: 10px; left: 70%;"></div>
+            <div class="light-dot" style="bottom: 10px; left: 90%;"></div>
+        </div>
+        <img src="images/Golden_Coin_Rush_logo.webp" alt="Golden Coin Rush" class="header-logo">
+        <p class="text-rush">los mitos de la probabilidad</p>
+    </header>
+
+    <main class="container">
+        <div class="chips-display">
+            <span class="chips-icon">💰</span>
+            <span class="chips-count">0</span>
+            <button class="btn-recharge" onclick="Casino.Recharge.show()" title="Recargar Fichas">+</button>
+        </div>
+
+        <!-- Arcade Machine Cabinet -->
+        <div class="arcade-container">
+            <div class="arcade-top">
+                <h2 class="text-golden" style="font-size: 2rem;">SELECT MISSION</h2>
+            </div>
+
+            <div class="arcade-screen">
+                <!-- Sidebar with game names -->
+                <div class="arcade-sidebar" id="gameSidebar">
+                    <!-- Dynamic list items here -->
+                </div>
+
+                <!-- Preview Area -->
+                <div class="arcade-preview" id="gamePreview">
+                    <div class="preview-image">
+                        <img id="previewImg" src="images/Golden_Coin_Rush_logo.webp" alt="Preview">
+                    </div>
+                    <div class="preview-content">
+                        <h3 id="previewTitle" class="text-golden">BIENVENIDO A GOLDEN COIN RUSH</h3>
+                        <p id="previewMyth" class="text-rush" style="font-size: 1.1rem;">Selecciona una misión para
+                            comenzar.</p>
+                        <p id="previewDesc" style="margin-bottom: 2rem; color: var(--casino-white);">
+                            Usa el panel de la izquierda para explorar los minijuegos disponibles.
+                        </p>
+                        <a id="previewBtn" href="#" class="btn btn-primary" style="display: none;">INICIAR MISIÓN</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arcade-controls">
+                <div class="joystick"></div>
+                <div style="display: flex; gap: 20px;">
+                    <div class="arcade-button red"
+                        onclick="Casino.Notifications.show('SISTEMA', 'Selecciona un juego en la pantalla principal.')">
+                    </div>
+                    <div class="arcade-button green" onclick="Casino.Animations.confetti()"></div>
+                    <div class="arcade-button gold" onclick="window.location.reload()"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p class="neon-text-gold">mitos de probabilidad</p>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--nikke-cyan);"></p>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        const games = [
+            {
+                title: "La Falacia del Jugador",
+                myth: "Si algo ha pasado mucho, ahora es menos probable.",
+                desc: "Simulador de lanzamiento de moneda que demuestra la independencia de eventos.",
+                url: "games/juego1.html",
+                img: "resources/Captura de pantalla 2026-04-04 192456.png"
+            },
+            {
+                title: "¿Puedes ganar al casino?",
+                myth: "Si juegas suficiente tiempo, terminarás ganando.",
+                desc: "Una ruleta visual que demuestra que la ventaja de la casa siempre gana a largo plazo.",
+                url: "games/juego2.html",
+                img: "resources/Captura de pantalla 2026-04-04 195654.png"
+            },
+            {
+                title: "La Carta que Nunca Sale",
+                myth: "Si una carta no ha salido, ahora es más probable.",
+                desc: "Un simulador de baraja que demuestra que no existe memoria en el azar.",
+                url: "games/juego3.html",
+                img: "resources/Captura de pantalla 2026-04-04 192539.png"
+            },
+            {
+                title: "Contagio en el Salón",
+                myth: "El contagio es azar y no depende del contacto.",
+                desc: "Simulador de propagación que explica la probabilidad condicional.",
+                url: "games/juego4.html",
+                img: "resources/Captura de pantalla 2026-04-04 192553.png"
+            },
+            {
+                title: "¿La Suerte Mejora?",
+                myth: "Si intento muchas veces, seguro lo logro.",
+                desc: "Tómbola con 5% de probabilidad que demuestra que el éxito no está garantizado.",
+                url: "games/juego5.html",
+                img: "resources/Captura de pantalla 2026-04-04 193417.png"
+            },
+            {
+                title: "Loot Box Simulator",
+                myth: "Con muchas cajas, el objeto legendario es seguro.",
+                desc: "Sistema de gacha que demuestra lo difícil que es obtener items legendarios.",
+                url: "games/juego6.html",
+                img: "resources/Captura de pantalla 2026-04-04 193559.png"
+            },
+            {
+                title: "¿Qué Número Saldrá?",
+                myth: "Los números tienen patrones.",
+                desc: "Ruleta de números que rompe la ilusión de patrones inexistentes.",
+                url: "games/juego7.html",
+                img: "resources/Captura de pantalla 2026-04-04 195708.png"
+            },
+            {
+                title: "La Ilusión de la Precisión",
+                myth: "Si algo casi ocurre, significa que estamos cerca de lograrlo.",
+                desc: "Tragamonedas interactivo que explica la percepción vs la probabilidad real.",
+                url: "games/juego8.html",
+                img: "resources/Captura de pantalla 2026-04-04 192711.png"
+            }
+
+        ];
+
+        function initArcade() {
+            const sidebar = document.getElementById('gameSidebar');
+            games.forEach((game, index) => {
+                const item = document.createElement('div');
+                item.className = 'game-list-item';
+                item.textContent = game.title;
+                item.onclick = () => selectGame(index);
+                sidebar.appendChild(item);
+            });
+
+            // Iniciar con el primero (opcional)
+            // selectGame(0);
+        }
+
+        function selectGame(index) {
+            const game = games[index];
+
+            // Update items classes
+            const items = document.querySelectorAll('.game-list-item');
+            items.forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+
+            // Update preview with animation
+            const preview = document.getElementById('gamePreview');
+            preview.style.opacity = '0';
+
+            setTimeout(() => {
+                document.getElementById('previewTitle').textContent = game.title;
+                document.getElementById('previewMyth').textContent = "MITO: " + game.myth;
+                document.getElementById('previewDesc').textContent = game.desc;
+                document.getElementById('previewImg').src = game.img;
+                document.getElementById('previewBtn').href = game.url;
+                document.getElementById('previewBtn').style.display = 'inline-block';
+
+                preview.style.opacity = '1';
+                preview.classList.add('page-transition');
+            }, 200);
+
+            // Simple notification of selection
+            console.log("Selected game:", game.title);
+        }
+
+        document.addEventListener('DOMContentLoaded', initArcade);
+    </script>
+</body>
+
+</html>

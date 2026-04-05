@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOLDEN COIN RUSH - Nikke Probabilidad</title>
+    <link rel="icon" href="images/Golden_Coin_Rush_logo.webp" type="image/webp">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #arcadeFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .btn-mute-global {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 10000;
+            background: linear-gradient(135deg, #2a2a2a, #000);
+            border: 2px solid var(--gold-3d-main);
+            color: var(--gold-3d-main);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.4rem;
+            box-shadow: 0 0 20px rgba(255, 202, 40, 0.4);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-mute-global:hover {
+            transform: scale(1.1) rotate(5deg);
+            border-color: var(--casino-orange);
+            box-shadow: 0 0 30px rgba(255, 140, 0, 0.6);
+        }
+
+        .intro-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 20000;
+            cursor: pointer;
+            transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1), transform 1.5s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #introVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .click-anywhere {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--nikke-cyan);
+            font-family: 'Orbitron';
+            text-shadow: var(--neon-cyan-shadow);
+            font-size: 1.2rem;
+            pointer-events: none;
+            animation: pulse 2s infinite;
+            opacity: 0;
+            transition: opacity 1s;
+            z-index: 20001;
+        }
+
+        .skip-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 20002;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid white;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Introducción con Video -->
+    <div id="introContainer" class="intro-container" onclick="startExperience()" style="display: none;">
+        <video id="introVideo" muted playsinline>
+            <source src="images/Timeline 1.mov" type="video/mp4">
+            <source src="images/Timeline 1.mov" type="video/quicktime">
+
+        </video>
+        <button class="skip-btn" onclick="event.stopPropagation(); startExperience()">SALTAR INTRO</button>
+        <div id="clickHint" class="click-anywhere"></div>
+    </div>
+
+    <!-- El Reproductor Maestro (Nunca se recarga) -->
+    <audio id="masterBGM" loop muted>
+        <source src="sound/GODDESS OF VICTORY_ NIKKE _ GOLDEN COIN RUSH BGM 「Lucky Night」- Full Ver. - (320 Kbps).mp3"
+            type="audio/mpeg">
+    </audio>
+
+    <!-- El Contenido Dinámico -->
+    <iframe id="arcadeFrame" src="arcade.html"></iframe>
+
+
+    <script>
+        const video = document.getElementById('introVideo');
+        const container = document.getElementById('introContainer');
+        const hint = document.getElementById('clickHint');
+        const bgm = document.getElementById('masterBGM');
+        const btnMute = document.getElementById('btnMute');
+        const welcomeModal = document.getElementById('welcomeModal');
+
+        let isMuted = localStorage.getItem('casino_muted') === 'true';
+        let firstVideoFinished = false;
+        let userWantsMusic = true;
+
+        // Configuración inicial de volumen
+        bgm.volume = 0.5; // Volumen al 50%
+
+        // Función para iniciar con o sin música
+        function startWithMusic(withMusic) {
+            userWantsMusic = withMusic;
+            isMuted = !withMusic;
+            localStorage.setItem('casino_muted', isMuted);
+
+            // Ocultar modal de bienvenida con animación
+            welcomeModal.style.opacity = '0';
+            welcomeModal.style.transition = 'opacity 0.5s ease';
+
+            setTimeout(() => {
+                welcomeModal.style.display = 'none';
+
+                // Mostrar contenedor de intro
+                container.style.display = 'flex';
+
+                // Iniciar música si el usuario aceptó
+                if (withMusic) {
+                    bgm.muted = false;
+                    bgm.play().catch(e => {
+                        console.log("Música bloqueada, se reproducirá tras interacción");
+                    });
+                }
+
+                // Iniciar video
+                video.play().catch(err => {
+                    console.log("Autoplay bloqueado, esperando clic");
+                    hint.style.opacity = "1";
+                    hint.textContent = "HAZ CLIC PARA REPRODUCIR";
+                });
+
+                updateMuteUI();
+            }, 500);
+        }
+
+        // Manejar secuencia de videos
+        video.onended = function () {
+            if (!firstVideoFinished) {
+                video.src = "images/Timeline 2.mov";
+                video.loop = true;
+                video.play();
+                firstVideoFinished = true;
+                hint.style.opacity = "1";
+                hint.textContent = "";
+            }
+        };
+
+        // Si hay error al cargar el video
+        video.onerror = function () {
+            console.error("Error al cargar el video. Posible formato no soportado.");
+            // Si el video falla, mostramos el botón de entrada directamente
+            hint.style.opacity = "1";
+            hint.textContent = "ENTRAR AL CASINO (Video no soportado)";
+        };
+
+        function startExperience() {
+            // Animación de salida
+            container.style.opacity = '0';
+            container.style.transform = 'scale(1.1)';
+
+            setTimeout(() => {
+                container.style.display = 'none';
+                video.pause();
+            }, 1500);
+
+            // Asegurar que el audio respete la elección del usuario
+            if (userWantsMusic) {
+                bgm.muted = false;
+            }
+            bgm.play().catch(e => console.log("Error al iniciar audio:", e));
+            updateMuteUI();
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            localStorage.setItem('casino_muted', isMuted);
+            bgm.muted = isMuted;
+            updateMuteUI();
+        }
+
+    </script>
+</body>
+
+</html>

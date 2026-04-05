@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego 6 - Loot Box Simulator</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estilos específicos para la mecánica de Loot Boxes */
+        .box-container {
+            perspective: 1000px;
+            margin: 2rem auto;
+            position: relative;
+        }
+
+        .loot-box {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto;
+            background: linear-gradient(145deg, var(--nikke-bg-light), var(--nikke-purple));
+            border: 3px solid var(--gold-3d-main);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: var(--neon-purple-shadow);
+            position: relative;
+            z-index: 2;
+        }
+
+        .loot-box:hover {
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: var(--neon-shadow-gold);
+        }
+
+        .loot-box.opening {
+            animation: boxShake 0.1s infinite;
+        }
+
+        @keyframes boxShake {
+            0% { transform: translate(2px, 1px) rotate(0deg); }
+            20% { transform: translate(-1px, -2px) rotate(-1deg); }
+            40% { transform: translate(-3px, 0px) rotate(1deg); }
+            60% { transform: translate(3px, 2px) rotate(0deg); }
+            80% { transform: translate(1px, -1px) rotate(1deg); }
+            100% { transform: translate(-1px, 2px) rotate(-1deg); }
+        }
+
+        .cards-display {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 2rem;
+            min-height: 200px;
+            padding: 20px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+        }
+
+        .card-item {
+            aspect-ratio: 2/3;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 0;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            border: 2px solid transparent;
+            background-size: 85%; /* Un poco más pequeño para que no se estire */
+            background-position: center 40%; /* Centrado y un poco más arriba */
+            background-repeat: no-repeat;
+            position: relative;
+            overflow: hidden;
+            animation: cardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        .card-item span {
+            background: rgba(0, 0, 0, 0.7);
+            width: 100%;
+            text-align: center;
+            padding: 4px 0;
+            backdrop-filter: blur(2px);
+            z-index: 2;
+            font-size: 0.6rem;
+        }
+
+        @keyframes cardPop {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Imágenes de Rareza */
+        .card-item.common { 
+            background-image: url('../images/doro-meme-viktor-v0-q7c2l74vf5xe1.webp'); 
+            border-color: #555; 
+            color: #aaa; 
+        }
+        .card-item.rare { 
+            background-image: url('../images/r.png'); 
+            border-color: var(--nikke-cyan); 
+            color: var(--nikke-cyan); 
+        }
+        .card-item.epic { 
+            background-image: url('../images/sr.png'); 
+            border-color: var(--nikke-pink); 
+            color: var(--nikke-pink); 
+        }
+        .card-item.legendary { 
+            background-image: url('../images/ssr.png'); 
+            border-color: var(--gold-3d-main); 
+            color: var(--gold-3d-main); 
+            box-shadow: var(--neon-shadow-gold);
+            animation: cardPop 0.4s both, legendaryGlow 2s infinite;
+        }
+
+        @keyframes legendaryGlow { 
+            0%, 100% { filter: brightness(1); } 
+            50% { filter: brightness(1.2) contrast(1.1); } 
+        }
+
+        .rarity-legend {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-chip {
+            padding: 0.5rem 1rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            border-radius: 2px;
+            border: 1px solid;
+            letter-spacing: 1px;
+        }
+
+        .explanation-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 5px solid var(--casino-orange);
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="page-transition">
+    <!-- Fichas HUD -->
+    <div class="chips-display">
+        <span class="chips-icon">💰</span>
+        <span class="chips-count">0</span>
+        <button class="btn-recharge" onclick="Casino.Recharge.show()" title="Recargar Fichas">+</button>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="nav-back">
+        <a href="../arcade.html" class="btn-back">← VOLVER AL MENÚ</a>
+    </nav>
+
+    <div class="game-container">
+        <!-- Título y Mito -->
+        <header style="text-align: center;">
+            <h1 class="text-golden" style="font-size: 3rem; margin-bottom: 0.5rem;">Loot Box Simulator</h1>
+            <div class="myth-box">
+                <p class="text-rush" style="font-size: 1.8rem;">"Si compro muchas, el legendario es seguro..."</p>
+            </div>
+        </header>
+
+        <!-- Panel de Juego -->
+        <main class="game-panel" style="text-align: center;">
+            <div class="rarity-legend">
+                <div class="legend-chip common" style="border-color: #555; color: #aaa;">DORO (80%)</div>
+                <div class="legend-chip rare" style="border-color: var(--nikke-cyan); color: var(--nikke-cyan);">R (50%)</div>
+                <div class="legend-chip epic" style="border-color: var(--nikke-pink); color: var(--nikke-pink);">SR (20%)</div>
+                <div class="legend-chip legendary" style="border-color: var(--gold-3d-main); color: var(--gold-3d-main);">SSR (5%)</div>
+            </div>
+
+            <div class="box-container">
+                <div id="lootBox" class="loot-box" onclick="openPack(1)">🎁</div>
+            </div>
+
+            <div class="action-buttons" style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                <button class="btn btn-primary" id="btn1" onclick="openPack(1)">INVOCAR 1 (-10)</button>
+                <button class="btn btn-primary" style="background: var(--nikke-purple); border-color: var(--nikke-pink);" id="btn10" onclick="openPack(10)">LOTE X10 (-90)</button>
+                <button class="btn btn-danger" onclick="resetGame()">RESET</button>
+            </div>
+
+            <div class="cards-display" id="cardsDisplay">
+                <span style="color: var(--gray); font-family: 'Orbitron'; font-size: 0.8rem;">ESPERANDO SUMINISTROS...</span>
+            </div>
+        </main>
+
+        <!-- Estadísticas -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">REGISTRO DE ADQUISICIÓN</h2>
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                <div class="stat-box">
+                    <div class="stat-value" id="countCommon">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.5rem; color: var(--nikke-cyan);">DOROS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="countRare">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.5rem; color: var(--nikke-cyan);">R (RARO)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="countEpic">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.5rem; color: var(--nikke-cyan);">SR (ÉPICO)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="countLegendary">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.5rem; color: var(--nikke-cyan);">SSR (SSR)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Educación -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">LA FALACIA DEL AZAR ACUMULADO</h2>
+            <div class="explanation-box">
+                <p>Cada apertura es un evento independiente. Tras 20 cajas de 5%, un 35.8% de los jugadores seguirán sin tener nada. <strong>El sistema no tiene memoria ni compasión</strong>.</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        let gameState = { counts: { common: 0, rare: 0, epic: 0, legendary: 0 }, totalCards: 0, isOpening: false };
+
+        // Definir rutas de imágenes para usar tanto en el juego como en la notificación
+        const RarityAssets = {
+            'legendary': { name: 'SSR', img: '../images/ssr.png' },
+            'epic':      { name: 'SR',  img: '../images/sr.png'  },
+            'rare':      { name: 'R',   img: '../images/r.png'   },
+            'common':    { name: 'DORO',img: '../images/doro-meme-viktor-v0-q7c2l74vf5xe1.webp' }
+        };
+
+        async function openPack(numCards) {
+            if (gameState.isOpening) return;
+            const cost = numCards === 1 ? 10 : 90;
+            if (!Casino.Chips.subtract(cost)) return;
+
+            gameState.isOpening = true;
+            const box = document.getElementById('lootBox');
+            box.classList.add('opening');
+            
+            await new Promise(r => setTimeout(r, 1200));
+            box.classList.remove('opening');
+            
+            const area = document.getElementById('cardsDisplay');
+            area.innerHTML = '';
+            
+            let foundLegendary = false;
+            let resultsArray = [];
+
+            for(let i=0; i < numCards; i++) {
+                const rarity = rollRarity();
+                gameState.counts[rarity]++;
+                gameState.totalCards++;
+                
+                const asset = RarityAssets[rarity];
+                
+                // Guardar para la notificación (con imagen)
+                resultsArray.push({ 
+                    img: asset.img, 
+                    type: rarity 
+                });
+
+                if (rarity === 'legendary') foundLegendary = true;
+                
+                const card = document.createElement('div');
+                card.className = `card-item ${rarity}`;
+                card.style.backgroundImage = `url('${asset.img}')`;
+                card.innerHTML = `<span>${asset.name}</span>`;
+                area.appendChild(card);
+            }
+
+            // Mostrar notificación con imágenes
+            if (foundLegendary) {
+                Casino.Notifications.show("SSR DETECTADO", "¡SUMINISTRO DE ALTA PRIORIDAD ADQUIRIDO!", 'win', null, resultsArray);
+                Casino.Animations.confetti();
+            } else {
+                Casino.Notifications.show("SUMINISTROS RECIBIDOS", "RESULTADOS DE LA OPERACIÓN:", 'info', -cost, resultsArray);
+            }
+
+            updateUI();
+            gameState.isOpening = false;
+        }
+
+        function rollRarity() {
+            const r = Math.random() * 100;
+            if (r < 5) return 'legendary';
+            if (r < 25) return 'epic';
+            if (r < 75) return 'rare';
+            return 'common';
+        }
+
+        function updateUI() {
+            document.getElementById('countCommon').textContent = gameState.counts.common;
+            document.getElementById('countRare').textContent = gameState.counts.rare;
+            document.getElementById('countEpic').textContent = gameState.counts.epic;
+            document.getElementById('countLegendary').textContent = gameState.counts.legendary;
+            Casino.Chips.updateDisplay();
+        }
+
+        function resetGame() { location.reload(); }
+        document.addEventListener('DOMContentLoaded', () => { Casino.Chips.init(1000); });
+    </script>
+</body>
+</html>

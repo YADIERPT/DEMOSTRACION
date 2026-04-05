@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego 1 - La Falacia del Jugador</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estilos específicos para la mecánica del Juego 1 */
+        .coin-visual {
+            width: 180px;
+            height: 180px;
+            margin: 2rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--gold-3d-main), var(--gold-3d-dark));
+            border: 4px solid var(--gold-3d-dark);
+            box-shadow: var(--neon-shadow-gold);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .coin-visual img {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
+        }
+
+        .coin-visual.flipping {
+            animation: coinFlipAnim 0.5s ease-in-out infinite;
+        }
+
+        @keyframes coinFlipAnim {
+            0%, 100% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.1); }
+        }
+
+        .prediction-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .btn-prediction {
+            padding: 1.2rem 2.5rem;
+            font-size: 1.2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid;
+            background: rgba(0, 0, 0, 0.5);
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .btn-prediction.cara { border-color: var(--nikke-gold); color: var(--nikke-gold); }
+        .btn-prediction.cara.selected { background: var(--nikke-gold); color: #000; box-shadow: var(--neon-shadow-gold); }
+
+        .btn-prediction.cruz { border-color: var(--nikke-pink); color: var(--nikke-pink); }
+        .btn-prediction.cruz.selected { background: var(--nikke-pink); color: #fff; box-shadow: var(--neon-pink-shadow); }
+
+        .probability-display {
+            background: rgba(157, 0, 255, 0.1);
+            border: 1px solid var(--nikke-purple);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .prob-value {
+            font-size: 2.5rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            color: var(--white);
+            text-shadow: var(--neon-cyan-shadow);
+        }
+
+        .explanation-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 5px solid var(--casino-orange);
+            padding: 1.5rem;
+            margin-top: 1rem;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .result-message {
+            margin-top: 1rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            height: 2rem;
+        }
+    </style>
+</head>
+<body class="page-transition">
+    <!-- Fichas HUD -->
+    <div class="chips-display">
+        <span class="chips-icon">💰</span>
+        <span class="chips-count">0</span>
+        <button class="btn-recharge" onclick="Casino.Recharge.show()" title="Recargar Fichas">+</button>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="nav-back">
+        <a href="../arcade.html" class="btn-back">← VOLVER AL MENÚ</a>
+    </nav>
+
+    <div class="game-container">
+        <!-- Título y Mito -->
+        <header style="text-align: center;">
+            <h1 class="text-golden" style="font-size: 3rem; margin-bottom: 0.5rem;">La Falacia del Jugador</h1>
+            <div class="myth-box">
+                <p class="text-rush" style="font-size: 1.8rem;">"Si ha salido mucho, ahora ya no saldrá..."</p>
+            </div>
+        </header>
+
+        <!-- Panel de Juego -->
+        <main class="game-panel" style="text-align: center;">
+            <div id="coinVisual" class="coin-visual">
+                <img id="coinImg" src="../images/Remove background project.png" alt="Cara">
+            </div>
+
+            <div class="probability-display">
+                <h3 class="text-golden" style="font-size: 1rem; margin-bottom: 0.5rem; letter-spacing: 2px;">Probabilidad en Tiempo Real</h3>
+                <div class="prob-value">50% : 50%</div>
+                <p style="color: var(--gray); font-size: 0.8rem; margin-top: 0.5rem; font-family: 'Orbitron';">EL AZAR NO TIENE MEMORIA</p>
+            </div>
+
+            <div class="prediction-section">
+                <h4 style="font-family: 'Orbitron'; letter-spacing: 2px; color: var(--gold-3d-main); margin-bottom: 1rem;">HAZ TU PREDICCIÓN</h4>
+                <div class="prediction-buttons">
+                    <button class="btn-prediction cara" id="btnCara" onclick="selectPrediction('cara')">👤 CARA</button>
+                    <button class="btn-prediction cruz" id="btnCruz" onclick="selectPrediction('cruz')">✚ CRUZ</button>
+                </div>
+                <p id="selectedPrediction" style="font-family: 'Orbitron'; font-size: 0.9rem; color: var(--nikke-cyan); min-height: 1.5rem;"></p>
+            </div>
+
+            <div class="action-buttons" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-primary" id="btnLanzar1" onclick="flipCoin(1)">LANZAR (10)</button>
+                <button class="btn btn-primary" style="background: var(--gold-metallic); color: #000;" id="btnLanzar20" onclick="flipCoin(20)">PACK x20 (200)</button>
+                <button class="btn btn-danger" onclick="resetGame()">RESET</button>
+            </div>
+
+            <div id="resultMessage" class="result-message"></div>
+        </main>
+
+        <!-- Estadísticas -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">REGISTRO DE DATOS</h2>
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalLanzamientos">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">TOTAL</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="carasCount">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">CARAS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="crucesCount">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">CRUCES</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="aciertosCount">0</div>
+                    <div class="stat-label" style="font-family: 'Orbitron'; font-size: 0.6rem; color: var(--nikke-cyan);">ACIERTOS</div>
+                </div>
+            </div>
+
+            <div class="history-container" style="margin-top: 2rem;">
+                <h4 style="font-family: 'Orbitron'; font-size: 0.8rem; margin-bottom: 1rem; color: var(--gold-3d-main);">HISTORIAL RECIENTE</h4>
+                <div id="historyContainer" class="history-items" style="display: flex; flex-wrap: wrap; gap: 5px;">
+                    <span style="color: var(--gray); font-family: 'Orbitron'; font-size: 0.7rem;">ESPERANDO LANZAMIENTO...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Educación -->
+        <section class="game-panel">
+            <h2 class="text-golden" style="font-size: 1.5rem; margin-bottom: 1.5rem;">¿QUÉ ESTÁ PASANDO?</h2>
+            <div class="explanation-box">
+                <p>La <strong>Falacia del Jugador</strong> es creer que los resultados pasados afectan la probabilidad futura en eventos independientes.</p>
+                <p style="margin-top: 1rem;">Incluso si han salido 10 caras seguidas, la probabilidad de que la siguiente sea cara sigue siendo del <strong>50%</strong>. La moneda no recuerda lo que hizo antes.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/main.js"></script>
+    <script>
+        let gameState = {
+            prediction: null,
+            totalLanzamientos: 0,
+            caras: 0,
+            cruces: 0,
+            aciertos: 0,
+            isFlipping: false
+        };
+
+        const IMAGES = {
+            cara: '../images/Remove background project.png',
+            cruz: '../images/Remove background project (1).png'
+        };
+
+        function selectPrediction(choice) {
+            gameState.prediction = choice;
+            document.getElementById('btnCara').classList.remove('selected');
+            document.getElementById('btnCruz').classList.remove('selected');
+            document.getElementById(choice === 'cara' ? 'btnCara' : 'btnCruz').classList.add('selected');
+            document.getElementById('selectedPrediction').textContent = `ESTADO: PREDICCIÓN ${choice.toUpperCase()} SELECCIONADA`;
+        }
+
+        async function flipCoin(times = 1) {
+            if (gameState.isFlipping || !gameState.prediction) {
+                if (!gameState.prediction) Casino.Notifications.show('ERROR', 'SELECCIONA CARA O CRUZ ANTES DE APOSTAR', 'warning');
+                return;
+            }
+
+            const cost = times === 1 ? 10 : 200;
+            if (!Casino.Chips.subtract(cost)) return;
+
+            gameState.isFlipping = true;
+            const coin = document.getElementById('coinVisual');
+            const coinImg = document.getElementById('coinImg');
+            coin.classList.add('flipping');
+            
+            let currentResults = [];
+
+            for(let i=0; i<times; i++) {
+                const result = Math.random() < 0.5 ? 'cara' : 'cruz';
+                gameState.totalLanzamientos++;
+                if (result === 'cara') gameState.caras++; else gameState.cruces++;
+                
+                const isHit = result === gameState.prediction;
+                if (isHit) {
+                    gameState.aciertos++;
+                    Casino.Chips.add(20);
+                }
+                
+                currentResults.push({
+                    img: IMAGES[result],
+                    type: isHit ? 'hit' : 'miss'
+                });
+            }
+
+            await new Promise(r => setTimeout(r, times === 1 ? 1000 : 2000));
+            
+            coin.classList.remove('flipping');
+            const last = currentResults[currentResults.length-1];
+            coinImg.src = last.img;
+            
+            updateStats();
+            updateHistory(currentResults);
+
+            const totalWin = currentResults.filter(r => r.type === 'hit').length * 20;
+            Casino.Notifications.show(
+                times === 1 ? 'RESULTADO' : 'RESULTADOS DEL PACK',
+                times === 1 ? (totalWin > 0 ? '¡GANASTE!' : 'PERDISTE') : `ACERTASTE ${totalWin/20} DE ${times}`,
+                totalWin > 0 ? 'win' : 'loss',
+                totalWin - cost,
+                currentResults
+            );
+
+            if (totalWin > 0) Casino.Animations.confetti();
+            gameState.isFlipping = false;
+        }
+
+        function updateStats() {
+            document.getElementById('totalLanzamientos').textContent = gameState.totalLanzamientos;
+            document.getElementById('carasCount').textContent = gameState.caras;
+            document.getElementById('crucesCount').textContent = gameState.cruces;
+            document.getElementById('aciertosCount').textContent = gameState.aciertos;
+            Casino.Chips.updateDisplay();
+        }
+
+        function updateHistory(results) {
+            const container = document.getElementById('historyContainer');
+            if (gameState.totalLanzamientos <= results.length) container.innerHTML = '';
+            
+            results.forEach(res => {
+                const item = document.createElement('span');
+                const isCara = res.img.includes('Remove');
+                item.className = `history-item ${isCara ? 'cara' : 'cruz'}`;
+                item.textContent = isCara ? 'C' : 'X';
+                item.style.padding = '4px 8px';
+                item.style.borderRadius = '2px';
+                item.style.fontSize = '0.7rem';
+                item.style.fontFamily = 'Orbitron';
+                container.appendChild(item);
+            });
+        }
+
+        function resetGame() {
+            location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            Casino.Chips.init();
+        });
+    </script>
+</body>
+</html>
